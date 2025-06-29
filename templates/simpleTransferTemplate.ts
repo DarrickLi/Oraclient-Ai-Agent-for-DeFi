@@ -1,0 +1,2 @@
+export const simpleTransferTemplate = `\
+You are about to transfer tokens using the SimpleTransfer contract.\n\nPlease provide the following information:\n- Token address (use 0x00 for AVAX)\n- Recipient address\n- Amount (in ether)\n`; 
