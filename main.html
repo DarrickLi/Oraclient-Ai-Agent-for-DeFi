@@ -1,0 +1,1413 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Prompt DeFi - AI-Powered DeFi Assistant</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <script src="https://cdn.jsdelivr.net/npm/web3@1.6.0/dist/web3.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@metamask/detect-provider"></script>
+    <script src="https://cdn.jsdelivr.net/npm/ethers@5.7.2/dist/ethers.umd.min.js"></script>
+    <style>
+        :root {
+            --primary: #2C6BED;
+            --secondary: #5D93FF;
+            --light-bg: #F7F9FF;
+            --card-bg: #FFFFFF;
+            --text-dark: #1E293B;
+            --text-light: #64748B;
+            --success: #10B981;
+            --warning: #F59E0B;
+            --border: #E2E8F0;
+            --error: #EF4444;
+            --user-bubble: #e3f2fd;
+            --ai-bubble: #f1f8ff;
+        }
+        
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Inter', 'Segoe UI', sans-serif;
+        }
+        
+        body {
+            background-color: var(--light-bg);
+            color: var(--text-dark);
+            min-height: 100vh;
+            padding: 20px;
+        }
+        
+        .header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 30px;
+        }
+        
+        .logo {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        
+        .logo-text {
+            font-size: 24px;
+            font-weight: 700;
+            color: var(--primary);
+        }
+        
+        .help-section {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+        }
+        
+        .deployment-badge {
+            background-color: var(--warning);
+            color: white;
+            padding: 4px 10px;
+            border-radius: 12px;
+            font-size: 12px;
+            font-weight: 500;
+        }
+        
+        .main-container {
+            display: grid;
+            grid-template-columns: 320px 1fr 300px;
+            gap: 24px;
+        }
+        
+        /* Wallet Panel Styles */
+        .wallet-panel {
+            background-color: var(--card-bg);
+            border-radius: 16px;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.05);
+            overflow: hidden;
+            position: relative;
+        }
+        
+        .wallet-header {
+            padding: 20px;
+            border-bottom: 1px solid var(--border);
+        }
+        
+        .panel-title {
+            font-size: 18px;
+            font-weight: 600;
+            margin-bottom: 8px;
+        }
+        
+        .connect-status {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-size: 14px;
+        }
+        
+        .connect-btn {
+            background: linear-gradient(to right, var(--primary), var(--secondary));
+            color: white;
+            border: none;
+            padding: 12px 24px;
+            border-radius: 12px;
+            font-weight: 600;
+            cursor: pointer;
+            width: 100%;
+            margin: 20px 0;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            transition: all 0.3s;
+        }
+        
+        .connect-btn:hover {
+            opacity: 0.9;
+            transform: translateY(-2px);
+        }
+        
+        .wallet-content {
+            padding: 20px;
+        }
+        
+        .info-item {
+            display: flex;
+            justify-content: space-between;
+            padding: 10px 0;
+            border-bottom: 1px solid var(--border);
+        }
+        
+        .info-label {
+            color: var(--text-light);
+            font-weight: 500;
+        }
+        
+        .info-value {
+            font-weight: 500;
+            font-size: 14px;
+            max-width: 65%;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+        
+        .section-title {
+            font-size: 16px;
+            font-weight: 600;
+            margin: 20px 0 12px;
+        }
+        
+        .balance-item {
+            display: flex;
+            justify-content: space-between;
+            padding: 8px 0;
+        }
+        
+        /* Agent Panel Styles */
+        .agent-panel {
+            background-color: var(--card-bg);
+            border-radius: 16px;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.05);
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
+            height: 80vh;
+        }
+        
+        .tabs {
+            display: flex;
+            padding: 0 20px;
+            border-bottom: 1px solid var(--border);
+        }
+        
+        .tab {
+            padding: 16px 24px;
+            font-weight: 600;
+            cursor: pointer;
+            position: relative;
+            color: var(--text-light);
+        }
+        
+        .tab.active {
+            color: var(--primary);
+        }
+        
+        .tab.active::after {
+            content: '';
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            width: 100%;
+            height: 3px;
+            background-color: var(--primary);
+        }
+        
+        .agent-container {
+            display: flex;
+            flex-direction: column;
+            height: 100%;
+        }
+        
+        .chat-container {
+            flex: 1;
+            padding: 20px;
+            overflow-y: auto;
+            display: flex;
+            flex-direction: column;
+        }
+        
+        .message {
+            max-width: 80%;
+            margin-bottom: 15px;
+            padding: 12px 16px;
+            border-radius: 18px;
+            line-height: 1.4;
+            position: relative;
+            animation: fadeIn 0.3s ease-in;
+        }
+        
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        
+        .user-message {
+            background-color: var(--user-bubble);
+            color: var(--text-dark);
+            align-self: flex-end;
+            border-bottom-right-radius: 4px;
+        }
+        
+        .ai-message {
+            background-color: var(--ai-bubble);
+            align-self: flex-start;
+            border-bottom-left-radius: 4px;
+        }
+        
+        .message-timestamp {
+            font-size: 10px;
+            color: var(--text-light);
+            margin-top: 5px;
+            text-align: right;
+        }
+        
+        .input-section {
+            padding: 20px;
+            border-top: 1px solid var(--border);
+            display: flex;
+            gap: 12px;
+        }
+        
+        .chat-input {
+            flex: 1;
+            padding: 14px 18px;
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            font-size: 16px;
+            resize: none;
+        }
+        
+        .send-btn {
+            background: var(--primary);
+            color: white;
+            border: none;
+            border-radius: 12px;
+            padding: 0 24px;
+            cursor: pointer;
+            font-weight: 600;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        
+        .send-btn i {
+            font-size: 18px;
+        }
+        
+        /* Features Panel Styles */
+        .features-panel {
+            background-color: var(--card-bg);
+            border-radius: 16px;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.05);
+            overflow: hidden;
+            padding: 20px;
+        }
+        
+        .features-title {
+            font-size: 20px;
+            font-weight: 700;
+            margin-bottom: 20px;
+            color: var(--primary);
+        }
+        
+        .section-subtitle {
+            font-size: 14px;
+            color: var(--text-light);
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            margin-bottom: 15px;
+            margin-top: 20px;
+        }
+        
+        .feature-list {
+            display: grid;
+            gap: 10px;
+        }
+        
+        .feature-item {
+            display: flex;
+            align-items: center;
+            padding: 12px 15px;
+            border-radius: 12px;
+            cursor: pointer;
+            transition: all 0.2s;
+            border: 1px solid var(--border);
+        }
+        
+        .feature-item:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 4px 10px rgba(0,0,0,0.08);
+            border-color: var(--primary);
+            background-color: rgba(44, 107, 237, 0.05);
+        }
+        
+        .feature-icon {
+            background-color: rgba(44, 107, 237, 0.1);
+            color: var(--primary);
+            width: 36px;
+            height: 36px;
+            border-radius: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin-right: 12px;
+            font-size: 18px;
+        }
+        
+        /* Tooltip and Connection Guide */
+        .tooltip {
+            position: relative;
+            display: inline-block;
+        }
+        
+        .tooltip .tooltiptext {
+            visibility: hidden;
+            width: 250px;
+            background-color: var(--text-dark);
+            color: #fff;
+            text-align: center;
+            border-radius: 6px;
+            padding: 12px;
+            position: absolute;
+            z-index: 1;
+            top: 150%;
+            left: 50%;
+            margin-left: -125px;
+            opacity: 0;
+            transition: opacity 0.3s;
+            font-size: 13px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.15);
+        }
+        
+        .tooltip:hover .tooltiptext {
+            visibility: visible;
+            opacity: 1;
+        }
+        
+        .connection-steps {
+            background-color: rgba(229, 231, 235, 0.3);
+            border-radius: 12px;
+            padding: 20px;
+            margin-top: 20px;
+        }
+        
+        .step {
+            display: flex;
+            margin-bottom: 15px;
+        }
+        
+        .step-number {
+            background-color: var(--primary);
+            color: white;
+            width: 24px;
+            height: 24px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 14px;
+            font-weight: bold;
+            margin-right: 12px;
+            flex-shrink: 0;
+        }
+        
+        .step-content {
+            font-size: 14px;
+        }
+        
+        /* Wallet Modal */
+        .wallet-modal {
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background-color: rgba(255, 255, 255, 0.95);
+            display: none;
+            justify-content: center;
+            align-items: center;
+            z-index: 100;
+            padding: 20px;
+        }
+        
+        .wallet-modal-content {
+            background-color: var(--card-bg);
+            border-radius: 16px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.15);
+            padding: 30px;
+            max-width: 400px;
+            width: 100%;
+            text-align: center;
+        }
+        
+        .modal-title {
+            font-size: 22px;
+            margin-bottom: 20px;
+            color: var(--text-dark);
+            font-weight: 700;
+        }
+        
+        .wallet-option {
+            display: flex;
+            align-items: center;
+            padding: 15px 20px;
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            margin-bottom: 15px;
+            cursor: pointer;
+            transition: all 0.3s;
+            text-align: left;
+        }
+        
+        .wallet-option:hover {
+            border-color: var(--primary);
+            background-color: rgba(44, 107, 237, 0.05);
+            transform: translateY(-2px);
+            box-shadow: 0 4px 10px rgba(0,0,0,0.08);
+        }
+        
+        .wallet-icon {
+            font-size: 28px;
+            margin-right: 15px;
+            width: 40px;
+            color: var(--primary);
+        }
+        
+        .wallet-name {
+            font-size: 18px;
+            font-weight: 600;
+        }
+        
+        .wallet-desc {
+            font-size: 14px;
+            color: var(--text-light);
+        }
+        
+        /* Wallet Not Installed Message */
+        .no-wallet-message {
+            background-color: #ffebee;
+            border: 1px solid #ffcdd2;
+            border-radius: 8px;
+            padding: 15px;
+            margin-top: 20px;
+            text-align: left;
+        }
+        
+        .no-wallet-title {
+            color: #d32f2f;
+            font-weight: 600;
+            margin-bottom: 8px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        
+        .no-wallet-links {
+            margin-top: 10px;
+            display: flex;
+            gap: 15px;
+        }
+        
+        .no-wallet-link {
+            color: var(--primary);
+            font-weight: 500;
+            text-decoration: none;
+            border-bottom: 1px dashed var(--primary);
+        }
+        
+        /* Copy Button */
+        .copy-button {
+            background-color: rgba(44, 107, 237, 0.1);
+            border: none;
+            border-radius: 6px;
+            padding: 4px 8px;
+            font-size: 12px;
+            color: var(--primary);
+            cursor: pointer;
+            margin-left: 8px;
+        }
+        
+        /* Parameter Modal */
+        .param-modal {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background-color: rgba(0,0,0,0.5);
+            display: none;
+            justify-content: center;
+            align-items: center;
+            z-index: 200;
+            padding: 20px;
+        }
+        
+        .param-modal-content {
+            background-color: var(--card-bg);
+            border-radius: 16px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.15);
+            padding: 30px;
+            max-width: 500px;
+            width: 100%;
+        }
+        
+        .param-modal-title {
+            font-size: 20px;
+            margin-bottom: 20px;
+            color: var(--text-dark);
+            font-weight: 700;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        
+        .param-form {
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+        }
+        
+        .param-group {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
+        
+        .param-label {
+            font-weight: 500;
+            color: var(--text-dark);
+        }
+        
+        .param-input {
+            padding: 12px 16px;
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            font-size: 16px;
+        }
+        
+        .param-buttons {
+            display: flex;
+            gap: 10px;
+            margin-top: 10px;
+        }
+        
+        .param-btn {
+            flex: 1;
+            padding: 12px;
+            border-radius: 12px;
+            font-weight: 600;
+            cursor: pointer;
+            border: none;
+        }
+        
+        .cancel-btn {
+            background-color: #f8fafc;
+            color: var(--text-light);
+            border: 1px solid var(--border);
+        }
+        
+        .confirm-btn {
+            background: var(--primary);
+            color: white;
+        }
+        
+        /* Loading animation */
+        .typing-indicator {
+            display: flex;
+            align-items: center;
+            gap: 4px;
+        }
+        
+        .typing-dot {
+            width: 8px;
+            height: 8px;
+            background-color: var(--text-light);
+            border-radius: 50%;
+            animation: typing 1.4s infinite ease-in-out;
+        }
+        
+        .typing-dot:nth-child(1) {
+            animation-delay: 0s;
+        }
+        
+        .typing-dot:nth-child(2) {
+            animation-delay: 0.2s;
+        }
+        
+        .typing-dot:nth-child(3) {
+            animation-delay: 0.4s;
+        }
+        
+        @keyframes typing {
+            0%, 60%, 100% {
+                transform: translateY(0);
+            }
+            30% {
+                transform: translateY(-5px);
+            }
+        }
+        
+        /* Responsive Design */
+        @media (max-width: 1200px) {
+            .main-container {
+                grid-template-columns: 1fr;
+            }
+            
+            .features-panel {
+                margin-top: 30px;
+            }
+            
+            .wallet-modal-content {
+                max-width: 90%;
+            }
+            
+            .param-modal-content {
+                max-width: 90%;
+            }
+        }
+        
+        @media (max-width: 768px) {
+            .message {
+                max-width: 90%;
+            }
+        }
+    </style>
+</head>
+<body>
+    <!-- Header Section -->
+    <div class="header">
+        <div class="logo">
+            <i class="fas fa-robot fa-xl" style="color: var(--primary);"></i>
+            <div class="logo-text">Prompt DeFi</div>
+        </div>
+        <div class="help-section">
+            <div class="deployment-badge">Goerli</div>
+            <div class="tooltip">
+                <i class="fas fa-info-circle" style="color: var(--text-light);"></i>
+                <span class="tooltiptext">
+                    <strong>Network Information:</strong><br>
+                    You're currently connected to the Goerli testnet. This allows you to test DeFi operations without using real funds.
+                </span>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Main Container -->
+    <div class="main-container">
+        <!-- Left: Wallet Panel -->
+        <div class="wallet-panel">
+            <div class="wallet-header">
+                <h2 class="panel-title">Smart Account Details</h2>
+                <div class="connect-status">
+                    <i class="fas fa-circle" id="statusDot" style="color: #EF4444; font-size: 12px;"></i>
+                    <span>Disconnected</span>
+                </div>
+            </div>
+            
+            <div class="wallet-content">
+                <button class="connect-btn" id="connectWallet">
+                    <i class="fab fa-ethereum"></i> Connect Wallet
+                </button>
+                
+                <div class="connection-steps" id="connectionGuide">
+                    <div class="step">
+                        <div class="step-number">1</div>
+                        <div class="step-content">Click the "Connect Wallet" button above</div>
+                    </div>
+                    <div class="step">
+                        <div class="step-number">2</div>
+                        <div class="step-content">Select your wallet provider (e.g. MetaMask)</div>
+                    </div>
+                    <div class="step">
+                        <div class="step-number">3</div>
+                        <div class="step-content">Approve the connection request</div>
+                    </div>
+                    <div class="step">
+                        <div class="step-number">4</div>
+                        <div class="step-content">Approve the smart contract creation</div>
+                    </div>
+                </div>
+                
+                <div class="info-section" id="accountDetails" style="display: none;">
+                    <div class="info-item">
+                        <span class="info-label">Network</span>
+                        <span class="info-value" id="network">Not connected</span>
+                    </div>
+                    
+                    <div class="info-item">
+                        <span class="info-label">Signer Account</span>
+                        <span class="info-value">
+                            <span id="signer">Not connected</span>
+                            <button class="copy-button" id="copyAddressBtn">
+                                <i class="far fa-copy"></i> Copy
+                            </button>
+                        </span>
+                    </div>
+                    
+                    <div class="info-item">
+                        <span class="info-label">Smart Account</span>
+                        <span class="info-value" id="smartAccount">0x16F8Bc...Bd432e</span>
+                    </div>
+                    
+                    <h3 class="section-title">Balances</h3>
+                    <div class="balance-item">
+                        <span id="mainTokenSymbol">ETH</span>
+                        <span id="ethBalance">0.0</span>
+                    </div>
+
+                </div>
+            </div>
+            
+            <!-- Wallet Modal -->
+            <div class="wallet-modal" id="walletModal">
+                <div class="wallet-modal-content">
+                    <h3 class="modal-title">Connect Your Wallet</h3>
+                    
+                    <div class="wallet-option" id="metamaskOption">
+                        <div class="wallet-icon">
+                            <i class="fab fa-ethereum"></i>
+                        </div>
+                        <div>
+                            <div class="wallet-name">MetaMask</div>
+                            <div class="wallet-desc">Connect to your MetaMask Wallet</div>
+                        </div>
+                    </div>
+                    
+                    <div class="wallet-option">
+                        <div class="wallet-icon">
+                            <i class="fas fa-wallet"></i>
+                        </div>
+                        <div>
+                            <div class="wallet-name">WalletConnect</div>
+                            <div class="wallet-desc">Connect with mobile wallet</div>
+                        </div>
+                    </div>
+                    
+                    <div class="wallet-option">
+                        <div class="wallet-icon">
+                            <i class="fas fa-coins"></i>
+                        </div>
+                        <div>
+                            <div class="wallet-name">Coinbase Wallet</div>
+                            <div class="wallet-desc">Connect to Coinbase Wallet</div>
+                        </div>
+                    </div>
+                    
+                    <div class="wallet-option">
+                        <div class="wallet-icon">
+                            <i class="fab fa-btc"></i>
+                        </div>
+                        <div>
+                            <div class="wallet-name">Trust Wallet</div>
+                            <div class="wallet-desc">Connect with Trust Wallet</div>
+                        </div>
+                    </div>
+                    
+                    <div id="noWalletSection" style="display: none;">
+                        <div class="no-wallet-message">
+                            <div class="no-wallet-title">
+                                <i class="fas fa-exclamation-triangle"></i>
+                                Wallet Not Installed
+                            </div>
+                            <p>You need to install an Ethereum wallet to use this platform. We recommend MetaMask which is the most popular wallet.</p>
+                            <div class="no-wallet-links">
+                                <a href="https://metamask.io/" target="_blank" class="no-wallet-link">Install MetaMask</a>
+                                <a href="https://ethereum.org/en/wallets/find-wallet/" target="_blank" class="no-wallet-link">Find Wallet</a>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Middle: Agent Panel -->
+        <div class="agent-panel">
+            <div class="tabs">
+                <div class="tab active">REQUEST</div>
+                <div class="tab">TEMPLATES</div>
+            </div>
+            
+            <div class="agent-container">
+                <div class="chat-container" id="chatContainer">
+                    <!-- AI welcome message -->
+                    <div class="message ai-message">
+                        <div class="bubble">
+                            Hi! I am Prompt DeFi. Just describe your request—and I'll execute your transactions. Connect your wallet to get started!
+                        </div>
+                        <div class="message-timestamp">Just now</div>
+                    </div>
+                    
+                    <!-- Example messages -->
+                    <div class="message ai-message">
+                        <div class="bubble">
+                            I can help you with token swaps, DeFi operations, transfers and more. Need examples? Try:
+                        </div>
+                        <div class="message-timestamp">Just now</div>
+                    </div>
+                    
+                    <div class="message ai-message">
+                        <div class="bubble" style="background-color: rgba(16, 185, 129, 0.1); border: 1px solid rgba(16, 185, 129, 0.2);">
+                            Swap 0.1 ETH for USDC
+                        </div>
+                        <div class="message-timestamp">Just now</div>
+                    </div>
+                    
+                    <div class="message ai-message">
+                        <div class="bubble" style="background-color: rgba(244, 114, 182, 0.1); border: 1px solid rgba(244, 114, 182, 0.2);">
+                            Deposit 0.5 ETH to Lido
+                        </div>
+                        <div class="message-timestamp">Just now</div>
+                    </div>
+                </div>
+                
+                <div class="input-section">
+                    <textarea class="chat-input" id="chatInput" placeholder="Enter your request..."></textarea>
+                    <button class="send-btn" id="sendBtn" disabled>
+                        <i class="fas fa-paper-plane"></i> Send
+                    </button>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Right: Features Panel -->
+        <div class="features-panel">
+            <h2 class="features-title">Supported Features</h2>
+            
+            <div class="section-subtitle">Core Transactions</div>
+            <div class="feature-list">
+                <div class="feature-item" data-template="swap">
+                    <div class="feature-icon"><i class="fas fa-exchange-alt"></i></div>
+                    <div>Swap Tokens</div>
+                </div>
+                <div class="feature-item" data-template="send">
+                    <div class="feature-icon"><i class="fas fa-paper-plane"></i></div>
+                    <div>Send Tokens</div>
+                </div>
+                <div class="feature-item" data-template="deposit">
+                    <div class="feature-icon"><i class="fas fa-wallet"></i></div>
+                    <div>Deposit to Lido</div>
+                </div>
+                <div class="feature-item" data-template="borrow">
+                    <div class="feature-icon"><i class="fas fa-hand-holding-usd"></i></div>
+                    <div>Borrow & Deposit</div>
+                </div>
+                <div class="feature-item" data-template="repay">
+                    <div class="feature-icon"><i class="fas fa-undo"></i></div>
+                    <div>Repay & Withdraw</div>
+                </div>
+            </div>
+            
+            <div class="section-subtitle">Triggers</div>
+            <div class="feature-list">
+                <div class="feature-item" data-template="stop-loss">
+                    <div class="feature-icon"><i class="fas fa-chart-line"></i></div>
+                    <div>Stop-Loss Trigger</div>
+                </div>
+                <div class="feature-item" data-template="take-profit">
+                    <div class="feature-icon"><i class="fas fa-bullseye"></i></div>
+                    <div>Take-Profit Trigger</div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Parameter Modal -->
+    <div class="param-modal" id="paramModal">
+        <div class="param-modal-content">
+            <h3 class="param-modal-title" id="paramModalTitle">
+                <i class="fas fa-exchange-alt"></i> Swap Tokens
+            </h3>
+            
+            <form class="param-form" id="paramForm">
+                <div class="param-group">
+                    <label class="param-label" for="amount">Amount</label>
+                    <input type="text" class="param-input" id="amount" placeholder="Enter amount">
+                </div>
+                
+                <div class="param-group">
+                    <label class="param-label" for="fromToken">From Token</label>
+                    <select class="param-input" id="fromToken">
+                        <option value="">Select token</option>
+                        <option value="ETH">ETH</option>
+                        <option value="USDC">USDC</option>
+                        <option value="DAI">DAI</option>
+                        <option value="WBTC">WBTC</option>
+                    </select>
+                </div>
+                
+                <div class="param-group">
+                    <label class="param-label" for="toToken">To Token</label>
+                    <select class="param-input" id="toToken">
+                        <option value="">Select token</option>
+                        <option value="ETH">ETH</option>
+                        <option value="USDC">USDC</option>
+                        <option value="DAI">DAI</option>
+                        <option value="WBTC">WBTC</option>
+                    </select>
+                </div>
+                
+                <div class="param-buttons">
+                    <button type="button" class="param-btn cancel-btn" id="cancelParamBtn">Cancel</button>
+                    <button type="submit" class="param-btn confirm-btn">Confirm</button>
+                </div>
+            </form>
+        </div>
+    </div>
+    
+    <script>
+        // DOM Elements
+        const connectBtn = document.getElementById('connectWallet');
+        const statusDot = document.getElementById('statusDot');
+        const accountDetails = document.getElementById('accountDetails');
+        const connectionGuide = document.getElementById('connectionGuide');
+        const sendBtn = document.getElementById('sendBtn');
+        const chatInput = document.getElementById('chatInput');
+        const walletModal = document.getElementById('walletModal');
+        const metamaskOption = document.getElementById('metamaskOption');
+        const noWalletSection = document.getElementById('noWalletSection');
+        const copyAddressBtn = document.getElementById('copyAddressBtn');
+        const networkEl = document.getElementById('network');
+        const signerEl = document.getElementById('signer');
+        const ethBalanceEl = document.getElementById('ethBalance');
+        const chatContainer = document.getElementById('chatContainer');
+        const featureItems = document.querySelectorAll('.feature-item');
+        const paramModal = document.getElementById('paramModal');
+        const paramForm = document.getElementById('paramForm');
+        const paramModalTitle = document.getElementById('paramModalTitle');
+        const cancelParamBtn = document.getElementById('cancelParamBtn');
+        
+        // Current action context
+        let currentAction = '';
+        const templates = {
+            'swap': {
+                title: 'Swap Tokens',
+                icon: 'fas fa-exchange-alt',
+                action: 'Swap',
+                params: ['amount', 'fromToken', 'toToken'],
+                labels: ['Amount', 'From Token', 'To Token'],
+                template: 'Swap __amount__ __fromToken__ for __toToken__'
+            },
+            'send': {
+                title: 'Send Tokens',
+                icon: 'fas fa-paper-plane',
+                action: 'Send',
+                params: ['amount', 'token', 'recipient'],
+                labels: ['Amount', 'Token', 'Recipient Address'],
+                template: 'Send __amount__ __token__ to __recipient__'
+            },
+            'deposit': {
+                title: 'Deposit to Lido',
+                icon: 'fas fa-wallet',
+                action: 'Deposit',
+                params: ['amount', 'token'],
+                labels: ['Amount', 'Token'],
+                template: 'Deposit __amount__ __token__ to Lido'
+            },
+            'borrow': {
+                title: 'Borrow & Deposit',
+                icon: 'fas fa-hand-holding-usd',
+                action: 'Borrow',
+                params: ['amount', 'token', 'protocol'],
+                labels: ['Amount', 'Token', 'Protocol'],
+                template: 'Borrow __amount__ __token__ from __protocol__ and deposit it'
+            },
+            'repay': {
+                title: 'Repay & Withdraw',
+                icon: 'fas fa-undo',
+                action: 'Repay',
+                params: ['amount', 'token', 'protocol'],
+                labels: ['Amount', 'Token', 'Protocol'],
+                template: 'Repay __amount__ __token__ to __protocol__ and withdraw collateral'
+            },
+            'stop-loss': {
+                title: 'Stop-Loss Trigger',
+                icon: 'fas fa-chart-line',
+                action: 'Set Stop-Loss',
+                params: ['token', 'price'],
+                labels: ['Token', 'Stop Price (USD)'],
+                template: 'Set stop-loss for __token__ at __price__ USD'
+            },
+            'take-profit': {
+                title: 'Take-Profit Trigger',
+                icon: 'fas fa-bullseye',
+                action: 'Set Take-Profit',
+                params: ['token', 'price'],
+                labels: ['Token', 'Take-Profit Price (USD)'],
+                template: 'Set take-profit for __token__ at __price__ USD'
+            }
+        };
+        
+        // 全局定义
+        const chainIdToSymbol = {
+            '0x1': 'ETH',
+            '0x5': 'ETH',
+            '0xaa36a7': 'ETH',
+            '0xa': 'ETH',
+            '0xa4b1': 'ETH',
+            '0x89': 'MATIC',
+            '0xa86a': 'AVAX',
+            '0xa869': 'AVAX',
+        };
+        
+        function updateMainTokenSymbol(chainId) {
+            const symbol = chainIdToSymbol[chainId] || 'ETH';
+            document.getElementById('mainTokenSymbol').textContent = symbol;
+        }
+        
+        // Check for Ethereum provider
+        function hasEthereum() {
+            return typeof window.ethereum !== 'undefined';
+        }
+        
+        // Show wallet connection modal
+        connectBtn.addEventListener('click', () => {
+            // Show the appropriate content based on wallet availability
+            if (hasEthereum()) {
+                noWalletSection.style.display = 'none';
+                walletModal.style.display = 'flex';
+            } else {
+                noWalletSection.style.display = 'block';
+                walletModal.style.display = 'flex';
+            }
+        });
+        
+        // Connect to MetaMask
+        metamaskOption.addEventListener('click', async () => {
+            const provider = await detectEthereumProvider();
+            if (!provider) {
+                alert('请安装MetaMask!');
+                return;
+            }
+            metamaskOption.innerHTML = `
+                <div class="wallet-icon">
+                    <i class="fas fa-spinner fa-spin"></i>
+                </div>
+                <div>
+                    <div class="wallet-name">Connecting...</div>
+                    <div class="wallet-desc">Approve connection in MetaMask</div>
+                </div>
+            `;
+            try {
+                const accounts = await provider.request({ method: 'eth_requestAccounts' });
+                connectBtn.innerHTML = '<i class="fab fa-ethereum"></i> Connected';
+                connectBtn.style.background = "#10B981";
+                statusDot.style.color = "#10B981";
+                walletModal.style.display = 'none';
+                connectionGuide.style.display = "none";
+                accountDetails.style.display = "block";
+                sendBtn.disabled = false;
+                signerEl.textContent = `${accounts[0].substring(0, 6)}...${accounts[0].substring(accounts[0].length - 4)}`;
+                addMessage("Wallet connected! You can now interact with the DeFi agent.", 'ai');
+                
+                // 连接钱包成功后
+                const chainId = await provider.request({ method: 'eth_chainId' });
+                updateMainTokenSymbol(chainId);
+
+                const balance = await provider.request({
+                    method: 'eth_getBalance',
+                    params: [accounts[0], "latest"]
+                });
+                const ethBalance = parseFloat(ethers.utils.formatEther(balance)).toFixed(4);
+                ethBalanceEl.textContent = ethBalance;
+                
+
+            } catch (error) {
+                alert('连接钱包失败: ' + error);
+                console.error("Error connecting wallet:", error, typeof error, JSON.stringify(error));
+                metamaskOption.innerHTML = `
+                    <div class="wallet-icon">
+                        <i class="fab fa-ethereum"></i>
+                    </div>
+                    <div>
+                        <div class="wallet-name">MetaMask</div>
+                        <div class="wallet-desc">Connect to your MetaMask Wallet</div>
+                    </div>
+                `;
+            }
+        });
+        
+        // Close modal if clicked outside
+        walletModal.addEventListener('click', (e) => {
+            if (e.target === walletModal) {
+                walletModal.style.display = 'none';
+            }
+        });
+        
+        // Handle account changes
+        if (hasEthereum()) {
+            ethereum.on('accountsChanged', (accounts) => {
+                if (accounts.length === 0) {
+                    // User disconnected
+                    resetWalletConnection();
+                } else {
+                    // Account changed
+                    signerEl.textContent = `${accounts[0].substring(0, 6)}...${accounts[0].substring(accounts[0].length - 4)}`;
+                }
+            });
+            
+            // Handle chain changes
+            ethereum.on('chainChanged', (chainId) => {
+                updateMainTokenSymbol(chainId);
+                window.location.reload();
+            });
+        }
+        
+        // Copy address to clipboard
+        copyAddressBtn.addEventListener('click', async () => {
+            if (signerEl.textContent !== 'Not connected') {
+                const address = signerEl.textContent;
+                await navigator.clipboard.writeText(address);
+                
+                // Show feedback
+                copyAddressBtn.innerHTML = '<i class="fas fa-check"></i> Copied!';
+                setTimeout(() => {
+                    copyAddressBtn.innerHTML = '<i class="far fa-copy"></i> Copy';
+                }, 2000);
+            }
+        });
+        
+        // Add message to chat
+        function addMessage(text, sender) {
+            const messageDiv = document.createElement('div');
+            messageDiv.className = `message ${sender === 'user' ? 'user-message' : 'ai-message'}`;
+            
+            const now = new Date();
+            const timestamp = `${now.getHours().toString().padStart(2, '0')}:${now.getMinutes().toString().padStart(2, '0')}`;
+            
+            if (sender === 'ai' && text === 'typing') {
+                messageDiv.innerHTML = `
+                    <div class="bubble">
+                        <div class="typing-indicator">
+                            <div class="typing-dot"></div>
+                            <div class="typing-dot"></div>
+                            <div class="typing-dot"></div>
+                        </div>
+                    </div>
+                `;
+            } else {
+                messageDiv.innerHTML = `
+                    <div class="bubble">${text}</div>
+                    <div class="message-timestamp">${timestamp}</div>
+                `;
+            }
+            
+            chatContainer.appendChild(messageDiv);
+            chatContainer.scrollTop = chatContainer.scrollHeight;
+        }
+        
+        // Send request functionality
+        sendBtn.addEventListener('click', function() {
+            const request = chatInput.value.trim();
+            if (!request) return;
+            
+            // Add user message
+            addMessage(request, 'user');
+            chatInput.value = '';
+            sendBtn.disabled = true;
+            
+            // Show typing indicator
+            addMessage('typing', 'ai');
+            
+            // Simulate AI response after a delay
+            setTimeout(() => {
+                // Remove typing indicator
+                const messages = document.querySelectorAll('.message');
+                const lastMessage = messages[messages.length - 1];
+                if (lastMessage.querySelector('.typing-indicator')) {
+                    lastMessage.remove();
+                }
+                
+                // Add AI response
+                addMessage(`I've received your request: "${request}". I'm currently processing this transaction.`, 'ai');
+            }, 2000);
+        });
+        
+        // Enable send button when typing
+        chatInput.addEventListener('input', function() {
+            sendBtn.disabled = this.value.trim() === '';
+        });
+        
+        // Allow sending with Enter key
+        chatInput.addEventListener('keydown', function(e) {
+            if (e.key === 'Enter' && !e.shiftKey) {
+                e.preventDefault();
+                if (!sendBtn.disabled) {
+                    sendBtn.click();
+                }
+            }
+        });
+        
+        // Reset wallet connection UI
+        function resetWalletConnection() {
+            connectBtn.innerHTML = '<i class="fab fa-ethereum"></i> Connect Wallet';
+            connectBtn.style.background = '';
+            statusDot.style.color = "#EF4444";
+            accountDetails.style.display = "none";
+            connectionGuide.style.display = "block";
+            sendBtn.disabled = true;
+            
+            signerEl.textContent = "Not connected";
+            ethBalanceEl.textContent = "0.0";
+            networkEl.textContent = "Not connected";
+        }
+        
+        // Handle feature item clicks
+        featureItems.forEach(item => {
+            item.addEventListener('click', () => {
+                const templateType = item.getAttribute('data-template');
+                if (!templateType) return;
+                
+                currentAction = templateType;
+                const template = templates[templateType];
+                
+                // Update modal title
+                paramModalTitle.innerHTML = `<i class="${template.icon}"></i> ${template.title}`;
+                
+                // Clear form
+                paramForm.innerHTML = '';
+                
+                // Create form fields based on template
+                template.params.forEach((param, index) => {
+                    const group = document.createElement('div');
+                    group.className = 'param-group';
+                    
+                    const label = document.createElement('label');
+                    label.className = 'param-label';
+                    label.textContent = template.labels[index];
+                    label.htmlFor = param;
+                    
+                    let input;
+                    if (param.includes('token') || param.includes('protocol')) {
+                        input = document.createElement('select');
+                        input.className = 'param-input';
+                        input.id = param;
+                        
+                        if (param === 'token') {
+                            // Token options
+                            const tokens = ['ETH', 'USDC', 'DAI', 'WBTC', 'WETH'];
+                            tokens.forEach(token => {
+                                const option = document.createElement('option');
+                                option.value = token;
+                                option.textContent = token;
+                                input.appendChild(option);
+                            });
+                        } else if (param === 'protocol') {
+                            // Protocol options
+                            const protocols = ['Aave', 'Compound', 'MakerDAO', 'Uniswap'];
+                            protocols.forEach(protocol => {
+                                const option = document.createElement('option');
+                                option.value = protocol;
+                                option.textContent = protocol;
+                                input.appendChild(option);
+                            });
+                        }
+                    } else {
+                        input = document.createElement('input');
+                        input.type = 'text';
+                        input.className = 'param-input';
+                        input.id = param;
+                        input.placeholder = `Enter ${template.labels[index]}`;
+                    }
+                    
+                    group.appendChild(label);
+                    group.appendChild(input);
+                    paramForm.appendChild(group);
+                });
+                
+                // Add submit buttons
+                const buttonsDiv = document.createElement('div');
+                buttonsDiv.className = 'param-buttons';
+                buttonsDiv.innerHTML = `
+                    <button type="button" class="param-btn cancel-btn" id="cancelParamBtn">Cancel</button>
+                    <button type="submit" class="param-btn confirm-btn">Confirm</button>
+                `;
+                paramForm.appendChild(buttonsDiv);
+                
+                // Show modal
+                paramModal.style.display = 'flex';
+            });
+        });
+        
+        // Handle form submission
+        paramForm.addEventListener('submit', (e) => {
+            e.preventDefault();
+            
+            const template = templates[currentAction];
+            let generatedText = template.template;
+            
+            // Replace placeholders with actual values
+            template.params.forEach(param => {
+                const input = document.getElementById(param);
+                generatedText = generatedText.replace(`__${param}__`, input.value);
+            });
+            
+            // Add as user message
+            addMessage(generatedText, 'user');
+            
+            // Show typing indicator
+            addMessage('typing', 'ai');
+            
+            // Simulate AI response after a delay
+            setTimeout(() => {
+                // Remove typing indicator
+                const messages = document.querySelectorAll('.message');
+                const lastMessage = messages[messages.length - 1];
+                if (lastMessage.querySelector('.typing-indicator')) {
+                    lastMessage.remove();
+                }
+                
+                // Add AI response
+                addMessage(`I've received your ${template.action.toLowerCase()} request. I'm preparing the transaction.`, 'ai');
+                
+                // Close modal
+                paramModal.style.display = 'none';
+            }, 1500);
+        });
+        
+        // Close parameter modal
+        cancelParamBtn.addEventListener('click', () => {
+            paramModal.style.display = 'none';
+        });
+        
+        paramModal.addEventListener('click', (e) => {
+            if (e.target === paramModal) {
+                paramModal.style.display = 'none';
+            }
+        });
+        
+        // Initialize chat with welcome message
+        window.addEventListener('load', () => {
+            // Add initial welcome messages
+            setTimeout(() => {
+                addMessage("I can help you with token swaps, DeFi operations, transfers and more. Need examples? Try:", 'ai');
+            }, 500);
+            
+            setTimeout(() => {
+                addMessage("Swap 0.1 ETH for USDC", 'ai');
+            }, 1000);
+            
+            setTimeout(() => {
+                addMessage("Deposit 0.5 ETH to Lido", 'ai');
+            }, 1500);
+        });
+        
+        async function connect() {
+            const provider = await detectEthereumProvider();
+            if (!provider) {
+                alert('请安装Metamask');
+                return;
+            }
+            try {
+                const accounts = await provider.request({ method: 'eth_requestAccounts' });
+                document.getElementById('address').textContent = accounts[0];
+            } catch (error) {
+                console.error("Error connecting wallet:", error, JSON.stringify(error));
+                alert('连接钱包失败: ' + (error && (error.message || JSON.stringify(error)) ? (error.message || JSON.stringify(error)) : error));
+            }
+        }
+        
+        if (window.ethereum) {
+            window.ethereum.on('chainChanged', (chainId) => {
+                updateMainTokenSymbol(chainId);
+                window.location.reload();
+            });
+        }
+        
+        function updateMainTokenSymbol(chainId) {
+            const symbol = chainIdToSymbol[chainId] || 'ETH';
+            document.getElementById('mainTokenSymbol').textContent = symbol;
+            ethBalanceEl.textContent = ethBalance;
+        }
+    </script>
+</body>
+</html>
