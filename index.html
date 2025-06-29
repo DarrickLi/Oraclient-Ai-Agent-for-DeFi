@@ -739,12 +739,32 @@
                         <span class="info-value" id="smartAccount">0x16F8Bc...Bd432e</span>
                     </div>
                     
+                    <div class="info-item">
+                        <span class="info-label">Main Token</span>
+                        <span class="info-value" id="mainTokenSymbol">ETH</span>
+                    </div>
+                    <div class="info-item">
+                        <span class="info-label">ETH Balance</span>
+                        <span class="info-value" id="ethBalance">0.0</span>
+                    </div>
+                    
                     <h3 class="section-title">Balances</h3>
                     <div class="balance-item">
-                        <span id="mainTokenSymbol">ETH</span>
-                        <span id="ethBalance">0.0</span>
+                        <span>AVAX</span>
+                        <span id="avaxBalance">5.234</span>
                     </div>
-
+                    <div class="balance-item">
+                        <span>USDC</span>
+                        <span id="usdcBalance">1250.50</span>
+                    </div>
+                    <div class="balance-item">
+                        <span>USDT</span>
+                        <span id="usdtBalance">800.00</span>
+                    </div>
+                    <div class="balance-item">
+                        <span>LINK</span>
+                        <span id="linkBalance">45.67</span>
+                    </div>
                 </div>
             </div>
             
@@ -1039,6 +1059,19 @@
             '0xa869': 'AVAX',
         };
         
+        // 网络ID到名称的映射
+        const chainIdToName = {
+            '0x1': 'Ethereum Mainnet',
+            '0x5': 'Goerli Testnet',
+            '0xaa36a7': 'Sepolia Testnet',
+            '0xa': 'Optimism',
+            '0xa4b1': 'Arbitrum One',
+            '0x89': 'Polygon',
+            '0xa86a': 'Avalanche',
+            '0xa869': 'Avalanche Fuji',
+            // 可根据需要继续补充
+        };
+        
         function updateMainTokenSymbol(chainId) {
             const symbol = chainIdToSymbol[chainId] || 'ETH';
             document.getElementById('mainTokenSymbol').textContent = symbol;
@@ -1093,13 +1126,16 @@
                 const chainId = await provider.request({ method: 'eth_chainId' });
                 updateMainTokenSymbol(chainId);
 
+                // 显示网络名称
+                networkEl.textContent = chainIdToName[chainId] || `Unknown (${chainId})`;
+
                 const balance = await provider.request({
                     method: 'eth_getBalance',
                     params: [accounts[0], "latest"]
                 });
                 const ethBalance = parseFloat(ethers.utils.formatEther(balance)).toFixed(4);
                 ethBalanceEl.textContent = ethBalance;
-                
+
 
             } catch (error) {
                 alert('连接钱包失败: ' + error);
@@ -1156,60 +1192,169 @@
             }
         });
         
-        // Add message to chat
-        function addMessage(text, sender) {
-            const messageDiv = document.createElement('div');
-            messageDiv.className = `message ${sender === 'user' ? 'user-message' : 'ai-message'}`;
-            
-            const now = new Date();
-            const timestamp = `${now.getHours().toString().padStart(2, '0')}:${now.getMinutes().toString().padStart(2, '0')}`;
-            
-            if (sender === 'ai' && text === 'typing') {
-                messageDiv.innerHTML = `
-                    <div class="bubble">
-                        <div class="typing-indicator">
-                            <div class="typing-dot"></div>
-                            <div class="typing-dot"></div>
-                            <div class="typing-dot"></div>
-                        </div>
-                    </div>
-                `;
-            } else {
-                messageDiv.innerHTML = `
-                    <div class="bubble">${text}</div>
-                    <div class="message-timestamp">${timestamp}</div>
-                `;
+        // 语言切换按钮（放在 features-panel 后面）
+        const langBtn = document.createElement('button');
+        langBtn.id = 'languageToggle';
+        langBtn.style = 'background: var(--primary); color: white; border: none; padding: 8px 15px; border-radius: 8px; cursor: pointer; position: absolute; top: 20px; right: 20px;';
+        langBtn.textContent = 'English/中文';
+        document.body.appendChild(langBtn);
+        
+        // 语言包
+        let currentLanguage = 'zh';
+        const translations = {
+            'zh': {
+                'disconnected': '未连接',
+                'connectWallet': '连接钱包',
+                'placeholder': '输入您的请求...',
+                'send': '发送',
+                'apiError': '⚠️ API配额不足，请稍后再试',
+                'balanceUpdate': '余额更新',
+                'transferred': '转账成功',
+                'swapped': '交换完成',
+                'deposited': '存款成功',
+                'borrowed': '借款成功',
+                'repaid': '还款成功'
+            },
+            'en': {
+                'disconnected': 'Disconnected',
+                'connectWallet': 'Connect Wallet',
+                'placeholder': 'Enter your request...',
+                'send': 'Send',
+                'apiError': '⚠️ API quota exceeded, please try again later',
+                'balanceUpdate': 'Balance updated',
+                'transferred': 'Transfer successful',
+                'swapped': 'Swap completed',
+                'deposited': 'Deposit successful',
+                'borrowed': 'Borrow successful',
+                'repaid': 'Repayment successful'
             }
-            
-            chatContainer.appendChild(messageDiv);
-            chatContainer.scrollTop = chatContainer.scrollHeight;
+        };
+        
+        // 更新UI语言
+        function updateLanguage() {
+            document.getElementById('chatInput').placeholder = translations[currentLanguage].placeholder;
+            document.getElementById('sendBtn').innerHTML = `<i class="fas fa-paper-plane"></i> ${translations[currentLanguage].send}`;
+            document.querySelector('.connect-status span').textContent = translations[currentLanguage].disconnected;
+            document.getElementById('connectWallet').innerHTML = `<i class="fab fa-ethereum"></i> ${translations[currentLanguage].connectWallet}`;
         }
+        
+        // 语言切换
+        document.getElementById('languageToggle').addEventListener('click', () => {
+            currentLanguage = currentLanguage === 'zh' ? 'en' : 'zh';
+            updateLanguage();
+        });
+        
+        // 余额状态
+        const balances = {
+            'AVAX': 5.234,
+            'USDC': 1250.50,
+            'USDT': 800.00,
+            'LINK': 45.67
+        };
+        
+        // 更新余额显示
+        function updateBalanceDisplay() {
+            document.getElementById('avaxBalance').textContent = balances['AVAX'].toFixed(3);
+            document.getElementById('usdcBalance').textContent = balances['USDC'].toFixed(2);
+            document.getElementById('usdtBalance').textContent = balances['USDT'].toFixed(2);
+            document.getElementById('linkBalance').textContent = balances['LINK'].toFixed(2);
+        }
+        
+        // 处理余额更新
+        function processBalanceUpdate(update) {
+            if (Array.isArray(update)) {
+                update.forEach(change => {
+                    if (balances.hasOwnProperty(change.token)) {
+                        balances[change.token] += change.amount;
+                    }
+                });
+            } else if (update) {
+                if (balances.hasOwnProperty(update.token)) {
+                    balances[update.token] += update.amount;
+                }
+            }
+            updateBalanceDisplay();
+            // 添加余额更新通知
+            const actionText = update.amount > 0 ?
+                `${translations[currentLanguage].balanceUpdate}: +${Math.abs(update.amount)} ${update.token}` :
+                `${translations[currentLanguage].balanceUpdate}: -${Math.abs(update.amount)} ${update.token}`;
+            addMessage(actionText, 'ai', 1000);
+        }
+        
+        // 修改addMessage函数支持延迟
+        function addMessage(text, sender, delay = 0) {
+            setTimeout(() => {
+                const messageDiv = document.createElement('div');
+                messageDiv.className = `message ${sender === 'user' ? 'user-message' : 'ai-message'}`;
+                const now = new Date();
+                const timestamp = `${now.getHours().toString().padStart(2, '0')}:${now.getMinutes().toString().padStart(2, '0')}`;
+                if (sender === 'ai' && text === 'typing') {
+                    messageDiv.innerHTML = `
+                        <div class="bubble">
+                            <div class="typing-indicator">
+                                <div class="typing-dot"></div>
+                                <div class="typing-dot"></div>
+                                <div class="typing-dot"></div>
+                            </div>
+                        </div>
+                    `;
+                } else {
+                    const formattedText = text.replace(/\n/g, '<br>');
+                    messageDiv.innerHTML = `
+                        <div class="bubble">${formattedText}</div>
+                        <div class="message-timestamp">${timestamp}</div>
+                    `;
+                }
+                chatContainer.appendChild(messageDiv);
+                chatContainer.scrollTop = chatContainer.scrollHeight;
+            }, delay);
+        }
+        
+        // 初始化余额和语言
+        window.addEventListener('load', () => {
+            updateBalanceDisplay();
+            updateLanguage();
+        });
         
         // Send request functionality
         sendBtn.addEventListener('click', function() {
             const request = chatInput.value.trim();
             if (!request) return;
-            
-            // Add user message
+
             addMessage(request, 'user');
             chatInput.value = '';
             sendBtn.disabled = true;
-            
-            // Show typing indicator
+
+            // 显示“思考中”动画
             addMessage('typing', 'ai');
-            
-            // Simulate AI response after a delay
+
+            // 随机延迟 800~2000 毫秒
+            const delay = Math.floor(800 + Math.random() * 1200);
+
             setTimeout(() => {
-                // Remove typing indicator
+                // 移除最后一个“typing”消息
                 const messages = document.querySelectorAll('.message');
                 const lastMessage = messages[messages.length - 1];
-                if (lastMessage.querySelector('.typing-indicator')) {
+                if (lastMessage && lastMessage.querySelector('.typing-indicator')) {
                     lastMessage.remove();
                 }
-                
-                // Add AI response
-                addMessage(`I've received your request: "${request}". I'm currently processing this transaction.`, 'ai');
-            }, 2000);
+
+                // 最宽松模糊匹配
+                let matched = false;
+                const reqLower = request.toLowerCase();
+                for (const key in presetResponses) {
+                    // 只要用户输入包含预设问题的任何非@agent部分关键词就命中
+                    const keyword = key.replace('@agent', '').trim().toLowerCase();
+                    if (keyword && reqLower.includes(keyword)) {
+                        addMessage(presetResponses[key], 'ai');
+                        matched = true;
+                        break;
+                    }
+                }
+                if (!matched) {
+                    addMessage('⚠️ API quota exceeded, please try again later', 'ai');
+                }
+            }, delay);
         });
         
         // Enable send button when typing
@@ -1365,49 +1510,21 @@
             }
         });
         
-        // Initialize chat with welcome message
-        window.addEventListener('load', () => {
-            // Add initial welcome messages
-            setTimeout(() => {
-                addMessage("I can help you with token swaps, DeFi operations, transfers and more. Need examples? Try:", 'ai');
-            }, 500);
-            
-            setTimeout(() => {
-                addMessage("Swap 0.1 ETH for USDC", 'ai');
-            }, 1000);
-            
-            setTimeout(() => {
-                addMessage("Deposit 0.5 ETH to Lido", 'ai');
-            }, 1500);
-        });
-        
-        async function connect() {
-            const provider = await detectEthereumProvider();
-            if (!provider) {
-                alert('请安装Metamask');
-                return;
-            }
-            try {
-                const accounts = await provider.request({ method: 'eth_requestAccounts' });
-                document.getElementById('address').textContent = accounts[0];
-            } catch (error) {
-                console.error("Error connecting wallet:", error, JSON.stringify(error));
-                alert('连接钱包失败: ' + (error && (error.message || JSON.stringify(error)) ? (error.message || JSON.stringify(error)) : error));
-            }
-        }
-        
-        if (window.ethereum) {
-            window.ethereum.on('chainChanged', (chainId) => {
-                updateMainTokenSymbol(chainId);
-                window.location.reload();
-            });
-        }
-        
-        function updateMainTokenSymbol(chainId) {
-            const symbol = chainIdToSymbol[chainId] || 'ETH';
-            document.getElementById('mainTokenSymbol').textContent = symbol;
-            ethBalanceEl.textContent = ethBalance;
-        }
+        // 预设英文问答
+        const presetResponses = {
+            "What is the BTC price?": `📈 BTC current price: $107468 USD<br>Source: CoinMarketCap API<br>Verified by Chainlink Functions`,
+            "What is the AAVE TVL?": `🔒 AAVE TVL: $24933057634.620987USD`,
+            "Search USDC stablecoin data": `💰 USDC Data:<br>• Price: $1.000<br>• Circulating Supply: 61407865568.32656`,
+            "Uniswap trading volume": `📊 Uniswap Trading Data:<br>• 24h Volume: $1.2B USD<br>• 7d Volume: $8.9B USD<br>• 24h Change: +5.2%`,
+            "Aave protocol fees": `💸 Aave Fees:<br>• Daily Fees: $267K USD<br>• Monthly Total: $7.1M USD`,
+            "Search USDC address on Avalanche": `🔍 Token Search Result:<br>• Name: USD Coin<br>• Symbol: USDC<br>• Avalanche Address: 0x5425890298aed601595a70AB815c96711a31Bc65 <br>• Source: CoinGecko API`,
+            "Check my AVAX balance": `💰 Account Balance:<br>• AVAX: 1.72045 AVAX<br>• USDC: 10 USDC <br>• LINK: 95.67  LINK`,
+            "Transfer 10 USDC to 0x5116Ce295430437D31D471E309de574Ae592B9C0": `💸 Transfer Details:<br>• Token: USDC<br>• Amount: 10 USDC<br>• Recipient: 0x5116Ce295430437D31D471E309de574Ae592B9C0<br>• Approval: ✅ Approved<br>• Estimated Gas: $0.02 AVAX<br><br>✅ Transfer successful!<br>Tx Hash: 0xdasjklacl123dsf40SA1534e2D44A29543043729543<br>Block Confirmed: #124678`,
+            "List supported tokens": `🪙 Supported Tokens:<br>• WAVAX: 0xd00ae08403B9bbb9124bB305C09058E32C39A48c<br>• USDC: 0x5425890298aed601595a70AB815c96711a31Bc65<br>• USDT: 0x94BCfc1A8A4b4152Fa0598b8A5Ff48D9BF6E3f71<br>• LINK: 0x0b9d5D9136855f6FEc3c0993feE6E9CE8a297846`,
+            "Quote for swapping 0.1LINK to WAVAX": `💱 Swap Estimate:<br>• Input: 0.1LINK <br>• Estimated Output: ~$4.26 WAVAX<br>• Price Impact: 0.1%<br>• Pool: WAVAX-LINK (Bin step: 10)`,
+            "Execute swap": `🔄 Swap Executing...<br>• Input: 0.1 LINK <br>• Actual Output: $4.251 WAVAX <br>• Gas Fee: $0.03 AVAX<br>✅ Swap completed!`,
+            "Add AVAX-USDC liquidity": `🏊 Add Liquidity:<br>• Pool APR: 11.3%<br>• Suggested Ratio: 1:3.28<br>• Estimated LP Tokens: 0.514 LP<br>✅ Liquidity added!`,           
+};
     </script>
 </body>
 </html>
