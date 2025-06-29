@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Prompt DeFi - AI-Powered DeFi Assistant</title>
+    <title>Oraclient - Ai Agent for DeFi</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <script src="https://cdn.jsdelivr.net/npm/web3@1.6.0/dist/web3.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/@metamask/detect-provider"></script>
@@ -49,6 +49,20 @@
             display: flex;
             align-items: center;
             gap: 10px;
+        }
+        
+        .logo-img {
+            width: 48px;
+            height: 48px;
+            border-radius: 8px;     /* 正方形，轻微圆角 */
+            object-fit: cover;
+            transition: all 0.3s ease;  /* 平滑过渡 */
+            cursor: pointer;
+        }
+        
+        .logo-img:hover {
+            transform: scale(1.05);  /* 悬停时轻微放大 */
+            opacity: 0.9;
         }
         
         .logo-text {
@@ -667,8 +681,8 @@
     <!-- Header Section -->
     <div class="header">
         <div class="logo">
-            <i class="fas fa-robot fa-xl" style="color: var(--primary);"></i>
-            <div class="logo-text">Prompt DeFi</div>
+            <img src="logo.png" alt="Logo" class="logo-img">
+            <div class="logo-text">Oraclient</div>
         </div>
         <div class="help-section">
             <div class="deployment-badge">Goerli</div>
@@ -750,20 +764,20 @@
                     
                     <h3 class="section-title">Balances</h3>
                     <div class="balance-item">
-                        <span>AVAX</span>
-                        <span id="avaxBalance">5.234</span>
+                        <span>WAVAX</span>
+                        <span id="WAVAXBalance">1.72045</span>
                     </div>
                     <div class="balance-item">
                         <span>USDC</span>
-                        <span id="usdcBalance">1250.50</span>
+                        <span id="usdcBalance">10</span>
                     </div>
                     <div class="balance-item">
                         <span>USDT</span>
-                        <span id="usdtBalance">800.00</span>
+                        <span id="usdtBalance">0</span>
                     </div>
                     <div class="balance-item">
                         <span>LINK</span>
-                        <span id="linkBalance">45.67</span>
+                        <span id="linkBalance">95.67</span>
                     </div>
                 </div>
             </div>
@@ -839,35 +853,7 @@
             
             <div class="agent-container">
                 <div class="chat-container" id="chatContainer">
-                    <!-- AI welcome message -->
-                    <div class="message ai-message">
-                        <div class="bubble">
-                            Hi! I am Prompt DeFi. Just describe your request—and I'll execute your transactions. Connect your wallet to get started!
-                        </div>
-                        <div class="message-timestamp">Just now</div>
-                    </div>
-                    
-                    <!-- Example messages -->
-                    <div class="message ai-message">
-                        <div class="bubble">
-                            I can help you with token swaps, DeFi operations, transfers and more. Need examples? Try:
-                        </div>
-                        <div class="message-timestamp">Just now</div>
-                    </div>
-                    
-                    <div class="message ai-message">
-                        <div class="bubble" style="background-color: rgba(16, 185, 129, 0.1); border: 1px solid rgba(16, 185, 129, 0.2);">
-                            Swap 0.1 ETH for USDC
-                        </div>
-                        <div class="message-timestamp">Just now</div>
-                    </div>
-                    
-                    <div class="message ai-message">
-                        <div class="bubble" style="background-color: rgba(244, 114, 182, 0.1); border: 1px solid rgba(244, 114, 182, 0.2);">
-                            Deposit 0.5 ETH to Lido
-                        </div>
-                        <div class="message-timestamp">Just now</div>
-                    </div>
+                    <!-- 聊天记录将在这里显示 -->
                 </div>
                 
                 <div class="input-section">
@@ -1213,7 +1199,8 @@
                 'swapped': '交换完成',
                 'deposited': '存款成功',
                 'borrowed': '借款成功',
-                'repaid': '还款成功'
+                'repaid': '还款成功',
+                'liquidityAdded': '已添加流动性'
             },
             'en': {
                 'disconnected': 'Disconnected',
@@ -1226,7 +1213,8 @@
                 'swapped': 'Swap completed',
                 'deposited': 'Deposit successful',
                 'borrowed': 'Borrow successful',
-                'repaid': 'Repayment successful'
+                'repaid': 'Repayment successful',
+                'liquidityAdded': 'Liquidity added'
             }
         };
         
@@ -1246,15 +1234,15 @@
         
         // 余额状态
         const balances = {
-            'AVAX': 5.234,
-            'USDC': 1250.50,
-            'USDT': 800.00,
-            'LINK': 45.67
+            'WAVAX': 1.72045,
+            'USDC': 10,
+            'USDT': 0,
+            'LINK': 95.67
         };
         
         // 更新余额显示
         function updateBalanceDisplay() {
-            document.getElementById('avaxBalance').textContent = balances['AVAX'].toFixed(3);
+            document.getElementById('WAVAXBalance').textContent = balances['WAVAX'].toFixed(3);
             document.getElementById('usdcBalance').textContent = balances['USDC'].toFixed(2);
             document.getElementById('usdtBalance').textContent = balances['USDT'].toFixed(2);
             document.getElementById('linkBalance').textContent = balances['LINK'].toFixed(2);
@@ -1279,6 +1267,50 @@
                 `${translations[currentLanguage].balanceUpdate}: +${Math.abs(update.amount)} ${update.token}` :
                 `${translations[currentLanguage].balanceUpdate}: -${Math.abs(update.amount)} ${update.token}`;
             addMessage(actionText, 'ai', 1000);
+        }
+        
+        // 处理交易相关的余额更新
+        function processTransactionBalanceUpdate(responseKey, userRequest) {
+            const reqLower = userRequest.toLowerCase();
+            
+            // 转账交易 - Transfer 10 USDC
+            if (responseKey.includes("Transfer 10 USDC")) {
+                setTimeout(() => {
+                    balances['USDC'] -= 10;
+                    updateBalanceDisplay();
+                    const message = currentLanguage === 'zh' 
+                        ? `💰 ${translations[currentLanguage].balanceUpdate}: -10 USDC`
+                        : `💰 ${translations[currentLanguage].balanceUpdate}: -10 USDC`;
+                    addMessage(message, 'ai');
+                }, 2000);
+            }
+            
+            // 交换交易 - Execute swap (0.1 LINK to WAVAX)
+            else if (responseKey.includes("Execute swap")) {
+                setTimeout(() => {
+                    balances['LINK'] -= 0.1;
+                    balances['WAVAX'] += 4.251;
+                    updateBalanceDisplay();
+                    const message = currentLanguage === 'zh' 
+                        ? `💰 ${translations[currentLanguage].balanceUpdate}: -0.1 LINK, +4.251 WAVAX`
+                        : `💰 ${translations[currentLanguage].balanceUpdate}: -0.1 LINK, +4.251 WAVAX`;
+                    addMessage(message, 'ai');
+                }, 2500);
+            }
+            
+            // 添加流动性 - Add AVAX-USDC liquidity
+            else if (responseKey.includes("Add AVAX-USDC liquidity")) {
+                setTimeout(() => {
+                    // 假设添加少量的 AVAX 和 USDC
+                    balances['WAVAX'] -= 0.5;
+                    balances['USDC'] -= 5;
+                    updateBalanceDisplay();
+                    const message = currentLanguage === 'zh' 
+                        ? `💰 ${translations[currentLanguage].balanceUpdate}: -0.5 WAVAX, -5 USDC (${translations[currentLanguage].liquidityAdded})`
+                        : `💰 ${translations[currentLanguage].balanceUpdate}: -0.5 WAVAX, -5 USDC (${translations[currentLanguage].liquidityAdded})`;
+                    addMessage(message, 'ai');
+                }, 2000);
+            }
         }
         
         // 修改addMessage函数支持延迟
@@ -1347,6 +1379,10 @@
                     const keyword = key.replace('@agent', '').trim().toLowerCase();
                     if (keyword && reqLower.includes(keyword)) {
                         addMessage(presetResponses[key], 'ai');
+                        
+                        // 处理交易相关的余额更新
+                        processTransactionBalanceUpdate(key, request);
+                        
                         matched = true;
                         break;
                     }
@@ -1519,7 +1555,7 @@
             "Aave protocol fees": `💸 Aave Fees:<br>• Daily Fees: $267K USD<br>• Monthly Total: $7.1M USD`,
             "Search USDC address on Avalanche": `🔍 Token Search Result:<br>• Name: USD Coin<br>• Symbol: USDC<br>• Avalanche Address: 0x5425890298aed601595a70AB815c96711a31Bc65 <br>• Source: CoinGecko API`,
             "Check my AVAX balance": `💰 Account Balance:<br>• AVAX: 1.72045 AVAX<br>• USDC: 10 USDC <br>• LINK: 95.67  LINK`,
-            "Transfer 10 USDC to 0x5116Ce295430437D31D471E309de574Ae592B9C0": `💸 Transfer Details:<br>• Token: USDC<br>• Amount: 10 USDC<br>• Recipient: 0x5116Ce295430437D31D471E309de574Ae592B9C0<br>• Approval: ✅ Approved<br>• Estimated Gas: $0.02 AVAX<br><br>✅ Transfer successful!<br>Tx Hash: 0xdasjklacl123dsf40SA1534e2D44A29543043729543<br>Block Confirmed: #124678`,
+            "Transfer 10 USDC to 0x5116Ce295430437D31D471E309de574Ae592B9C0": `💸 Transfer Details:<br>• Token: USDC<br>• Amount: 10 USDC<br>• Recipient: 0x5116Ce295430437D31D471E309de574Ae592B9C0`,
             "List supported tokens": `🪙 Supported Tokens:<br>• WAVAX: 0xd00ae08403B9bbb9124bB305C09058E32C39A48c<br>• USDC: 0x5425890298aed601595a70AB815c96711a31Bc65<br>• USDT: 0x94BCfc1A8A4b4152Fa0598b8A5Ff48D9BF6E3f71<br>• LINK: 0x0b9d5D9136855f6FEc3c0993feE6E9CE8a297846`,
             "Quote for swapping 0.1LINK to WAVAX": `💱 Swap Estimate:<br>• Input: 0.1LINK <br>• Estimated Output: ~$4.26 WAVAX<br>• Price Impact: 0.1%<br>• Pool: WAVAX-LINK (Bin step: 10)`,
             "Execute swap": `🔄 Swap Executing...<br>• Input: 0.1 LINK <br>• Actual Output: $4.251 WAVAX <br>• Gas Fee: $0.03 AVAX<br>✅ Swap completed!`,
