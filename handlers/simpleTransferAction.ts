@@ -1,8 +1,8 @@
 import { Action, composeContext, generateObjectDeprecated, HandlerCallback, ModelClass, type State, type IAgentRuntime, type Memory } from "@elizaos/core";
-import { initWalletProvider } from "../providers/wallet.ts";
+import { initWalletProvider } from "../providers/wallet";
 import type { SimpleTransferParams } from "../types/index.ts";
-import { SimpleTransferAction } from "../actions/SimpleTransferAction.ts";
-import { simpleTransferTemplate } from "../templates/simpleTransferTemplate.ts";
+import { SimpleTransferAction } from "../actions/SimpleTransferAction";
+import { simpleTransferTemplate } from "../templates/simpleTransferTemplate";
 
 const buildFunctionCallDetails = async (
     state: State,
