@@ -1,0 +1,2 @@
+export const getDeFiDataTemplate = `\
+You are about to fetch DeFi data using the GetDeFiData contract.\n\nPlease provide the following information:\n- Data type (e.g. tvl, stablecoins, volumes, fees)\n- Object (e.g. chain name, stablecoin symbol, DEX name, protocol name)\n`; 

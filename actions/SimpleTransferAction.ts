@@ -8,7 +8,7 @@ export class SimpleTransferAction {
 
     async transfer(params: SimpleTransferParams): Promise<Transaction> {
         const chainName = "avalancheFuji";
-        const contractAddress: `0x${string}` = "0x18757A2aC602a2FFc71b6Ca8B0F0ca5aEB8d13E9"; // dev TODO: 填写部署后的合约地址
+        const contractAddress: `0x${string}` = "0x3372690834E2Ee5AFEd3a2eb0cD6F6427C83b54A"; // dev TODO: 填写部署后的合约地址
 
         if (contractAddress === "0x00") {
             throw new Error("Contract address is not set");

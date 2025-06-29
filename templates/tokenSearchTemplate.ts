@@ -1,0 +1,2 @@
+export const tokenSearchTemplate = `\
+You are about to search for a token address using the TokenSearch contract.\n\nPlease provide the following information:\n- Token name (e.g. USDC, Wrapped Bitcoin)\n`; 

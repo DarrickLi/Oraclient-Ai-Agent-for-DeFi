@@ -1,0 +1,2 @@
+export const basicDEXOperationsTemplate = `\
+You are about to swap tokens using the BasicDEXOperations contract.\n\nPlease provide the following information:\n- Input token address\n- Output token address\n- Amount in\n- Minimum amount out\n- Bin step (e.g. 25, 50, 100)\n`; 
