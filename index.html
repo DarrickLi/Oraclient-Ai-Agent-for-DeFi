@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Oraclient - Ai Agent for DeFi</title>
+    <title>Oraclient - AI Agent for DeFi</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <script src="https://cdn.jsdelivr.net/npm/web3@1.6.0/dist/web3.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/@metamask/detect-provider"></script>
@@ -421,16 +421,16 @@
         
         /* Wallet Modal */
         .wallet-modal {
-            position: absolute;
+            position: fixed;
             top: 0;
             left: 0;
             right: 0;
             bottom: 0;
-            background-color: rgba(255, 255, 255, 0.95);
+            background-color: rgba(0, 0, 0, 0.5);
             display: none;
             justify-content: center;
             align-items: center;
-            z-index: 100;
+            z-index: 1000;
             padding: 20px;
         }
         
@@ -675,13 +675,233 @@
                 max-width: 90%;
             }
         }
+        
+        /* 入口界面样式 */
+        .welcome-screen {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100vh;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            z-index: 9999;
+            color: white;
+            text-align: center;
+            padding: 20px;
+        }
+        
+        .welcome-logo {
+            width: 120px;
+            height: 120px;
+            border-radius: 20px;
+            margin-bottom: 30px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.3);
+            animation: logoFloat 3s ease-in-out infinite;
+        }
+        
+        @keyframes logoFloat {
+            0%, 100% { transform: translateY(0px) rotate(0deg); }
+            50% { transform: translateY(-10px) rotate(2deg); }
+        }
+        
+        .welcome-title {
+            font-size: 48px;
+            font-weight: 700;
+            margin-bottom: 15px;
+            background: linear-gradient(45deg, #fff, #f0f0f0);
+            -webkit-background-clip: text;
+            background-clip: text;
+            -webkit-text-fill-color: transparent;
+            animation: titleGlow 2s ease-in-out infinite alternate;
+        }
+        
+        @keyframes titleGlow {
+            from { text-shadow: 0 0 20px rgba(255,255,255,0.5); }
+            to { text-shadow: 0 0 30px rgba(255,255,255,0.8); }
+        }
+        
+        .welcome-subtitle {
+            font-size: 24px;
+            margin-bottom: 10px;
+            opacity: 0.9;
+            font-weight: 300;
+        }
+        
+        .welcome-description {
+            font-size: 18px;
+            margin-bottom: 50px;
+            opacity: 0.8;
+            max-width: 600px;
+            line-height: 1.6;
+        }
+        
+        .start-button {
+            background: linear-gradient(45deg, #FF6B6B, #FF8E8E);
+            color: white;
+            border: none;
+            padding: 18px 50px;
+            font-size: 20px;
+            font-weight: 600;
+            border-radius: 50px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            box-shadow: 0 8px 25px rgba(255, 107, 107, 0.4);
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+        
+        .start-button:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 12px 35px rgba(255, 107, 107, 0.6);
+            background: linear-gradient(45deg, #FF5252, #FF7979);
+        }
+        
+        .start-button:active {
+            transform: translateY(-1px);
+        }
+        
+        .feature-highlights {
+            display: flex;
+            gap: 40px;
+            margin-top: 60px;
+            flex-wrap: wrap;
+            justify-content: center;
+        }
+        
+        .feature-item-welcome {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            opacity: 0.8;
+            animation: fadeInUp 1s ease-out;
+        }
+        
+        .feature-item-welcome:nth-child(1) { animation-delay: 0.2s; }
+        .feature-item-welcome:nth-child(2) { animation-delay: 0.4s; }
+        .feature-item-welcome:nth-child(3) { animation-delay: 0.6s; }
+        
+        @keyframes fadeInUp {
+            from {
+                opacity: 0;
+                transform: translateY(30px);
+            }
+            to {
+                opacity: 0.8;
+                transform: translateY(0);
+            }
+        }
+        
+        .feature-icon-welcome {
+            font-size: 36px;
+            margin-bottom: 15px;
+            color: rgba(255,255,255,0.9);
+        }
+        
+        .feature-text-welcome {
+            font-size: 16px;
+            font-weight: 500;
+        }
+        
+        /* 主界面隐藏状态 */
+        .main-content {
+            display: none;
+        }
+        
+        .main-content.active {
+            display: block;
+            animation: slideInFromRight 0.8s ease-out;
+        }
+        
+        @keyframes slideInFromRight {
+            from {
+                opacity: 0;
+                transform: translateX(100px);
+            }
+            to {
+                opacity: 1;
+                transform: translateX(0);
+            }
+        }
+        
+        .welcome-screen.fade-out {
+            animation: fadeOut 0.8s ease-out forwards;
+        }
+        
+        @keyframes fadeOut {
+            to {
+                opacity: 0;
+                visibility: hidden;
+            }
+        }
+        
+        /* 响应式设计 */
+        @media (max-width: 768px) {
+            .welcome-title {
+                font-size: 36px;
+            }
+            
+            .welcome-subtitle {
+                font-size: 20px;
+            }
+            
+            .welcome-description {
+                font-size: 16px;
+                padding: 0 20px;
+            }
+            
+            .feature-highlights {
+                flex-direction: column;
+                gap: 30px;
+            }
+            
+            .start-button {
+                padding: 15px 40px;
+                font-size: 18px;
+            }
+        }
     </style>
 </head>
 <body>
+    <!-- 入口欢迎界面 -->
+    <div class="welcome-screen" id="welcomeScreen">
+        <img src="logo.png?v=20250630001" alt="Logo" class="welcome-logo">
+        <h1 class="welcome-title">Oraclient</h1>
+        <h2 class="welcome-subtitle">AI Agent for DeFi</h2>
+        <p class="welcome-description">
+            Welcome to your intelligent DeFi assistant! Simply describe your needs, and our AI will execute complex blockchain transactions for you.
+            Supporting token swaps, liquidity management, lending operations, and various DeFi functionalities.
+        </p>
+        
+        <button class="start-button" id="startButton">
+            🚀 Get Started
+        </button>
+        
+        <div class="feature-highlights">
+            <div class="feature-item-welcome">
+                <div class="feature-icon-welcome">🔄</div>
+                <div class="feature-text-welcome">Smart Swap</div>
+            </div>
+            <div class="feature-item-welcome">
+                <div class="feature-icon-welcome">💰</div>
+                <div class="feature-text-welcome">Asset Management</div>
+            </div>
+            <div class="feature-item-welcome">
+                <div class="feature-icon-welcome">🤖</div>
+                <div class="feature-text-welcome">AI Powered</div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- 主应用界面 -->
+    <div class="main-content" id="mainContent">
     <!-- Header Section -->
     <div class="header">
         <div class="logo">
-            <img src="logo.png" alt="Logo" class="logo-img">
+            <img src="logo.png?v=20250630001" alt="Logo" class="logo-img" id="logoImg" title="Back to Home">
             <div class="logo-text">Oraclient</div>
         </div>
         <div class="help-section">
@@ -949,8 +1169,37 @@
             </form>
         </div>
     </div>
+    </div> <!-- 结束 main-content -->
     
     <script>
+        // 入口界面控制
+        document.getElementById('startButton').addEventListener('click', function() {
+            const welcomeScreen = document.getElementById('welcomeScreen');
+            const mainContent = document.getElementById('mainContent');
+            const startButton = this;
+            
+            // 按钮点击效果
+            startButton.style.transform = 'scale(0.95)';
+            startButton.innerHTML = '🚀 Starting...';
+            
+            setTimeout(() => {
+                // 添加淡出动画
+                welcomeScreen.classList.add('fade-out');
+                
+                // 等待动画完成后显示主界面
+                setTimeout(() => {
+                    welcomeScreen.style.display = 'none';
+                    mainContent.classList.add('active');
+                    // 初始化主应用
+                    initMainApp();
+                    // 恢复按钮状态
+                    startButton.style.transform = '';
+                    startButton.innerHTML = '🚀 Get Started';
+                }, 800);
+            }, 200);
+        });
+        
+        // 主应用的JavaScript代码开始
         // DOM Elements
         const connectBtn = document.getElementById('connectWallet');
         const statusDot = document.getElementById('statusDot');
@@ -1347,6 +1596,23 @@
             updateBalanceDisplay();
             updateLanguage();
         });
+        
+        // 当主界面显示时初始化
+        function initMainApp() {
+            updateBalanceDisplay();
+            updateLanguage();
+            
+            // 添加logo点击返回主页功能
+            document.getElementById('logoImg').addEventListener('click', () => {
+                const welcomeScreen = document.getElementById('welcomeScreen');
+                const mainContent = document.getElementById('mainContent');
+                
+                mainContent.classList.remove('active');
+                mainContent.style.display = 'none';
+                welcomeScreen.style.display = 'flex';
+                welcomeScreen.classList.remove('fade-out');
+            });
+        }
         
         // Send request functionality
         sendBtn.addEventListener('click', function() {
