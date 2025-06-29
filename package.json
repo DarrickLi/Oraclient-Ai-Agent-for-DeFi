@@ -42,6 +42,9 @@
   "scripts": {
     "start": "elizaos start",
     "dev": "elizaos dev",
+    "defi": "node start-defi-app.js",
+    "api": "npm run build && node dist/src/api-server.js",
+    "api:dev": "tsup && node dist/src/api-server.js",
     "build": "tsup",
     "lint": "prettier --write ./src",
     "test:component": "vitest run",
